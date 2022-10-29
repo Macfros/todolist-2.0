@@ -1,5 +1,7 @@
 //jshint esversion:6
 
+//jshint esversion:6
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -7,24 +9,22 @@ const _ = require("lodash");
 
 const app = express();
 
+app.set('view engine', 'ejs');
 
-//date initialisation for title
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static("public"));
+
+mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser: true,  useUnifiedTopology: true,
+   useFindAndModify: false});
+
 const d= new Date();
 const weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const month = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 const fulldate = weekday[d.getDay()] +", "+ d.getDate() +" "+ month[d.getMonth()] ;
-//date initialisation ends
 
 
-
-app.set('view engine', 'ejs');
-
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(express.static("public"));
-
-mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser: true, useUnifiedTopology: true});
 
 const itemsSchema = {
   name: String
@@ -32,15 +32,12 @@ const itemsSchema = {
 
 const Item = mongoose.model("Item", itemsSchema);
 
-
 const item1 = new Item({
   name: "Welcome to your todolist!"
 });
-
 const item2 = new Item({
   name: "Hit the + button to add a new item."
 });
-
 const item3 = new Item({
   name: "<-- Hit this to delete an item."
 });
@@ -69,7 +66,7 @@ app.get("/", function(req, res) {
       });
       res.redirect("/");
     } else {
-      res.render("list", {listTitle: fulldate , newListItems: foundItems});
+      res.render("list", {listTitle: fulldate, newListItems: foundItems, fulldate: fulldate});
     }
   });
 
@@ -91,7 +88,7 @@ app.get("/:customListName", function(req, res){
       } else {
         //Show an existing list
 
-        res.render("list", {listTitle: foundList.name, newListItems: foundList.items});
+        res.render("list", {listTitle: foundList.name, newListItems: foundList.items, fulldate: fulldate});
       }
     }
   });
@@ -109,7 +106,7 @@ app.post("/", function(req, res){
     name: itemName
   });
 
-  if (listName === "Today"){
+  if (listName === fulldate){
     item.save();
     res.redirect("/");
   } else {
@@ -125,7 +122,7 @@ app.post("/delete", function(req, res){
   const checkedItemId = req.body.checkbox;
   const listName = req.body.listName;
 
-  if (listName === "Today") {
+  if (listName === fulldate) {
     Item.findByIdAndRemove(checkedItemId, function(err){
       if (!err) {
         console.log("Successfully deleted checked item.");
@@ -139,8 +136,6 @@ app.post("/delete", function(req, res){
       }
     });
   }
-
-
 });
 
 app.get("/about", function(req, res){

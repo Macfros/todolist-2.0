@@ -1,5 +1,12 @@
 <%- include("header") -%>
 
+<% if(listTitle != fulldate) { %>
+  <div class="date_list">
+
+      <%= fulldate %>
+    </div>
+    <% } %>
+    
   <div class="box" id="heading">
     <h1> <%= listTitle %> </h1>
   </div>
